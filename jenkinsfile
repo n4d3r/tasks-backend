@@ -3,6 +3,9 @@ pipeline {
 
     options { disableConcurrentBuilds() }
 
+    environment {
+        def scannerHome = tool name: 'SONAR_SCANNER', type: 'hudson.plugins.sonar.SonarRunnerInstallation';
+    }
     
 	stages {
 
@@ -18,10 +21,7 @@ pipeline {
 
         stage('Sonar Analysis'){
             steps{
-                echo "-----INÍCIO - ANÁLISE SONAR-----"     
-                environment {
-                    def scannerHome = tool name: 'SONAR_SCANNER', type: 'hudson.plugins.sonar.SonarRunnerInstallation';
-                }           
+                echo "-----INÍCIO - ANÁLISE SONAR-----"   
                 withSonarQubeEnv('SONAR_LOCAL'){
                     sh "${scannerHome}/bin/sonar-scanner -e   -Dsonar.projectKey=conta-corrente-teste -Dsonar.host.url=http://192.168.99.100:9000 -Dsonar.login=85aaa89d493485b218b969357cb8f288e9b0ff23 -Dsonar.java.binaries=target"
                 }                
