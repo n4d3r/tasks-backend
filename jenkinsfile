@@ -9,7 +9,23 @@ pipeline {
         }
     
     environment {
-    	
+    	// WORKING
+    	//maven = tool name: 'local_maven3.6.3'
+        //MAVEN_HOME = "${maven}/bin"
+        
+        maven = tool name: 'local_maven3.2.5'
+        MAVEN_HOME = "${maven}/bin"
+        //PATH = "${MAVEN_HOME};${PATH};"
+        
+        // in case you need to use a specific JDK:
+        jdk = tool name: 'JDK1.6'
+        JAVA_HOME = "${jdk}"
+        //PATH = "${JAVA_HOME};${MAVEN_HOME};${PATH};"
+        
+        CURRENT_VERSION = ""
+        
+        URL_REPOSITORY_GITLAB = "https://github.com/n4d3r/tasks-backend"
+
         //scannerHome = tool 'sonar_scanner'
         def scannerHome = tool name: 'sonar_scanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation';
     }
@@ -21,7 +37,7 @@ pipeline {
 			steps {
 
                 echo "-----INÍCIO - BUILD-----"
-	      		sh "mvn clean package -DskipTests=true"
+	      		sh "${MAVEN_HOME}/mvn clean package -DskipTests=true"
 	           	echo "-----FIM - BUILD-----"
           	}
       	}
