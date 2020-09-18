@@ -3,32 +3,6 @@ pipeline {
 
     options { disableConcurrentBuilds() }
 
-    parameters {
-        string(name: 'BRANCH', defaultValue: 'master', description: 'Informe qual branch, tag ou commit ID deverá ser feito o build e consequentemente o upload para o svn ou nexus. Padrão: producao', trim: true)
-        credentials(name: 'CREDENTIALS_ID', description: 'Credenciais utilizadas para acessar o GITLAB e SVN. Essa credencial não é utilizada para o nexus, pois as credenciais do nexus são obtidas a partir do arquivo maven.settings.xml', defaultValue: 'gen_jenkins', credentialType: "Username with password", required: true)
-        }
-    
-    environment {
-    	// WORKING
-    	//maven = tool name: 'local_maven3.6.3'
-        //MAVEN_HOME = "${maven}/bin"
-        
-        maven = tool name: 'local_maven3.2.5'
-        MAVEN_HOME = "${maven}/bin"
-        //PATH = "${MAVEN_HOME};${PATH};"
-        
-        // in case you need to use a specific JDK:
-        jdk = tool name: 'JDK1.6'
-        JAVA_HOME = "${jdk}"
-        //PATH = "${JAVA_HOME};${MAVEN_HOME};${PATH};"
-        
-        CURRENT_VERSION = ""
-        
-        URL_REPOSITORY_GITLAB = "https://github.com/n4d3r/tasks-backend"
-
-        //scannerHome = tool 'sonar_scanner'
-        def scannerHome = tool name: 'sonar_scanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation';
-    }
     
 	stages {
 
@@ -37,16 +11,19 @@ pipeline {
 			steps {
 
                 echo "-----INÍCIO - BUILD-----"
-	      		sh "${MAVEN_HOME}/mvn clean package -DskipTests=true"
+	      		sh "mvn clean package -DskipTests=true"
 	           	echo "-----FIM - BUILD-----"
           	}
       	}
 
         stage('Sonar Analysis'){
             steps{
-                echo "-----INÍCIO - ANÁLISE SONAR-----"                
-                withSonarQubeEnv('sonar'){
-                    sh "${scannerHome}/bin/sonar-scanner -e -Dsonar.projectKey=conta-corrente-teste -Dsonar.host.url=http://10.0.21.6:9000 -Dsonar.login=8cb3f143097e0fc294ba3e711a08c2ace4da0a59 -Dsonar.java.binaries=target"
+                echo "-----INÍCIO - ANÁLISE SONAR-----"     
+                environment {
+                    scannerHome = tool 'SONAR_SCANNER'
+                }           
+                withSonarQubeEnv('SONAR_LOCAL'){
+                    sh "${scannerHome}/bin/sonar-scanner -e   -Dsonar.projectKey=conta-corrente-teste -Dsonar.host.url=http://192.168.99.100:9000 -Dsonar.login=85aaa89d493485b218b969357cb8f288e9b0ff23 -Dsonar.java.binaries=target"
                 }                
             }
 
@@ -57,13 +34,9 @@ pipeline {
             steps{
                 echo "-----INÍCIO - QUALITY GATE-----"
                 sleep(30)
-                timeout(time: 1, unit: 'HOURS'){
+                timeout(time: 1, unit: 'MINUTES'){
                     waitForQualityGate abortPipeline: true
                 }
-                //qg = waitForQualityGate() // Reuse taskId previously collected by withSonarQubeEnv
-                //if (qg.status != 'OK') {
-                //    error "Pipeline aborted due to quality gate failure: ${qg.status}"
-               // }
             }
         }
 
